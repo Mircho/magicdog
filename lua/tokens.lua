@@ -1,34 +1,37 @@
--- Tokens module 
+-- Tokens module
 
 local driver = require 'luasql.sqlite3'
 
 -- Generator for new tokens
 
-local tokensGen
+local tokensGen = function() end
 
-function allCapsGenerator(...)
+local allCapsGenerator = function(...)
     local size = (select(1,...)) or 6
     local count = (select(2,...)) or 1
     local state = { tokenChars = size, tokensCount = count, chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" }
     return tokensGen, state
 end
 
-function alphanumGenerator(...)
+local alphanumGenerator = function(...)
     local size = (select(1,...)) or 6
     local count = (select(2,...)) or 1
-    local state = { tokenChars = size, tokensCount = count, chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" }
+    local state = { tokenChars = size,
+                    tokensCount = count,
+                    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+                  }
     return tokensGen, state
 end
 
 function tokensGen( state )
     if ( state.tokensCount > 0 ) then
-        local result = "", j
-        for j = 1,state.tokenChars,1 do
+        local result = ""
+        for _ = 1,state.tokenChars,1 do
             local pos = math.random(1,state.chars:len())
             result = result .. state.chars:sub(pos,pos)
         end
         state.tokensCount = state.tokensCount - 1
-        return result    
+        return result
     else
         return nil
     end
@@ -36,7 +39,7 @@ end
 
 -- Generator for new tokens
 
-local Tokens = { 
+local Tokens = {
     dbname = "vouchers.db",
     allCapsGen = allCapsGenerator,
     alpahnumGen = alphanumGenerator,
@@ -49,7 +52,7 @@ function Tokens:init( dbname )
     end
     local dbf = assert( io.open( dbname, "r" ) )
     if ( dbf ~= nil ) then
-        io.close( dbf ) 
+        io.close( dbf )
         self.dbname = dbname
     end
     self.env = driver.sqlite3()

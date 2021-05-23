@@ -1,132 +1,25 @@
 local inspect = require('inspect')
-local argparse = require 'argparse'
+local argparse = require 'lib/argparse'
+local Tokens = require 'tokens'
 
-local driver = require 'luasql.sqlite3'
--- local env = driver.sqlite3()
--- local db = env:connect('Tokens.db')
-
--- Generator for new tokens
-
-local tokensGen
-
-function allCapsGenerator(...)
-    local size = (select(1,...)) or 6
-    local count = (select(2,...)) or 1
-    local state = { tokenChars = size, tokensCount = count, chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" }
-    return tokensGen, state
-end
-
-function alphanumGenerator(...)
-    local size = (select(1,...)) or 6
-    local count = (select(2,...)) or 1
-    local state = { tokenChars = size, tokensCount = count, chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" }
-    return tokensGen, state
-end
-
-function tokensGen( state )
-    if ( state.tokensCount > 0 ) then
-        local result = "", j
-        for j = 1,state.tokenChars,1 do
-            local pos = math.random(1,state.chars:len())
-            result = result .. state.chars:sub(pos,pos)
-        end
-        state.tokensCount = state.tokensCount - 1
-        return result    
-    else
-        return nil
-    end
-end
-
--- for tkn in alphanumGenerator(5,2) do
---     print("Token(tm) :", tkn)
--- end
-
--- Generator for new tokens
-
-
-local Tokens = { 
-    dbname = "vouchers.db"
-}
-
-function Tokens:init( dbname )
-    if ( dbname == nil ) then
-        dbname = self.dbname
-    end
-    local dbf = io.open( dbname, "r" )
-    if ( dbf ~= nil ) then
-        io.close( dbf ) 
-        self.dbname = dbname
-    else
-        print( "Database does not exist" )
-        return nil
-    end
-    self.env = driver.sqlite3()
-    self.db = self.env:connect( self.dbname )
-end
-
-function Tokens:close()
-    self.db:close()
-    self.env:close()
-end
-
-function Tokens:find( token_name )
-    local _token = self.db:execute(string.format( [[SELECT * FROM tokens WHERE token="%s" LIMIT 1]], token_name ))
-    local tokenRecord = _token:fetch( {}, "a" )
-    _token:close()
-    if( tokenRecord == nil ) then
-        return nil
-    else
-        return tokenRecord
-    end
-end
-
-function Tokens:findById( token_id )
-    local _token = self.db:execute(string.format( [[SELECT * FROM tokens WHERE token_id="%s" LIMIT 1]], token_id ))
-    local tokenRecord = _token:fetch( {}, "a" )
-    _token:close()
-    if( tokenRecord == nil ) then
-        return nil
-    else
-        return tokenRecord
-    end
-end
-
-function Tokens:use( token_id )
-    local tokensAff = self.db:execute( string.format( [[UPDATE tokens SET used=1 WHERE token_id=%d]],token_id) )
-    return math.floor(tokensAff)
-end
-
-function Tokens:add( token_num )
-    local insertSQL = "INSERT INTO tokens VALUES "
-    local newTokensList = ""
-
-    for tkn in allCapsGenerator( 5, token_num ) do
-        insertSQL = insertSQL .. string.format( [[(NULL, "%s", 0, %d),]], tkn, 900 )
-        newTokensList = newTokensList .. "\n" .. tkn
-    end
-
-    insertSQL = insertSQL:sub(1,-2) .. ";"
-
-    print(insertSQL)
-    self.db:execute( insertSQL )
-    return newTokensList
-end
-
-
-Tokens:init()
-print( "Found token: ", Tokens:find( "TOK000" ).TOKEN )
--- print( "Adding tokens... ")
--- Tokens:add(4)
+local dbName = "vouchers.db"
+Tokens:init( dbName )
 
 local parser = argparse("Tokens", "Tokens script")
                 :command_target("command")
                 :require_command(false)
+
+-- this will be called by NDS to query if the user has credentials, response should be
+-- a string of this kind 3600 0 0
+-- first number is number of seconds this session has
+-- second and third are respectively upload and download limits in bytes
 
 local install_command = parser:command("auth_client")
 install_command:argument( "mac" )
 install_command:argument( "user" )
 install_command:argument( "password" )
 
+-- the following commands will be notifications from NDS to this script for specific events
 -- argument list is mac, incoming bytes, outgoing bytes, session start, session end
 
 local c_auth = parser:command "client_auth"
@@ -151,7 +44,7 @@ ndsctl_auth:argument( "aux", "additional arguments"):args("5+")
 
 local ndsctl_deauth = parser:command "ndsctl_deauth"
         :description "Client was deauthenticated by the ndsctl tool"
-ndsctl_auth:argument( "aux", "additional arguments"):args("5+")
+ndsctl_deauth:argument( "aux", "additional arguments"):args("5+")
 
 local shutdown_deauth = parser:command "shutdown_deauth"
         :description "Client was deauthenticated by Nodogsplash terminating"
@@ -191,7 +84,7 @@ end
 
 if ( args["add"] ~= -1 ) then
     local tokenstoadd = args["add"]
-    newTokens = Tokens:add(tokenstoadd)
+    local newTokens = Tokens:add(tokenstoadd)
     print("Added new tokens: ", tokenstoadd)
     print(newTokens)
 end
