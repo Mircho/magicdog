@@ -1,23 +1,53 @@
-local inspect = require('inspect')
 local argparse = require 'lib/argparse'
-local Tokens = require 'tokens'
 
+-- tokens are initialized further down in the callback of the --db option parser
+-- if we got the option from command line to use another db
+local Tokens = require 'lib/tokens'
 local dbName = "vouchers.db"
-Tokens:init( dbName )
+
+-- return value from exxecution of the program
+local retValue = 1
+
+-- callbacks to commands
+
+local authorize_action = function( args )
+    local tokenres = Tokens:find(args.password)
+    -- print("Token we look for is: ", args.password)
+    if( tokenres ) then
+        print( tokenres.BUDGET .. " 0 0" )
+        retValue = 0
+    else
+        retValue = 1
+    end
+end
 
 local parser = argparse("Tokens", "Tokens script")
                 :command_target("command")
                 :require_command(false)
+
+-- parser options
+
+-- here we initialize the tokens 
+parser:option("-D --db", "Database to be used.", dbName, nil, "1"):action(function(args,_,dbName)
+    args[_] = dbName
+    Tokens:init( dbName )
+end)
+
+parser:option("-I --id", "Token id to find.", -1, tonumber, "1")
+parser:option("-T --token", "Token to find.", -1, nil, "1")
+parser:option("-A --add", "Tokens to add.", -1, tonumber, "1")
+
 
 -- this will be called by NDS to query if the user has credentials, response should be
 -- a string of this kind 3600 0 0
 -- first number is number of seconds this session has
 -- second and third are respectively upload and download limits in bytes
 
-local install_command = parser:command("auth_client")
-install_command:argument( "mac" )
-install_command:argument( "user" )
-install_command:argument( "password" )
+local authorize_command = parser:command("auth_client")
+authorize_command:argument( "mac" )
+authorize_command:argument( "user" )
+authorize_command:argument( "password" )
+authorize_command:action( authorize_action )
 
 -- the following commands will be notifications from NDS to this script for specific events
 -- argument list is mac, incoming bytes, outgoing bytes, session start, session end
@@ -50,44 +80,7 @@ local shutdown_deauth = parser:command "shutdown_deauth"
         :description "Client was deauthenticated by Nodogsplash terminating"
 shutdown_deauth:argument( "aux", "additional arguments"):args("5+")
 
-parser:option("-I --id", "Token id to find.", -1, tonumber, "1")
-parser:option("-T --token", "Token to find.", -1, nil, "1")
-parser:option("-A --add", "Tokens to add.", -1, tonumber, "1")
 local args = parser:parse()
-
-print(inspect(args))
-
-local retValue = 0
-
-if ( args["id"] ~= -1 ) then
-    local tokenid = args["id"]
-    local tokenres = Tokens:findById(tokenid)
-    print("Token id we look for is: ", tokenid)
-    if( tokenres ) then
-        print("Token found is: ", tokenres.TOKEN)
-    else
-        print("But this is was not found")
-    end
-end
-
-if ( args["token"] ~= -1 ) then
-    local token_name = args["token"]
-    local tokenres = Tokens:find(token_name)
-    print("Token we look for is: ", token_name)
-    if( tokenres ) then
-        print("Token found is: ", tokenres.TOKEN .. "," .. tokenres.BUDGET)
-    else
-        print("But this is was not found")
-        retValue = 1
-    end
-end
-
-if ( args["add"] ~= -1 ) then
-    local tokenstoadd = args["add"]
-    local newTokens = Tokens:add(tokenstoadd)
-    print("Added new tokens: ", tokenstoadd)
-    print(newTokens)
-end
 
 Tokens:close()
 

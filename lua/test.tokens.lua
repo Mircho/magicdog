@@ -1,6 +1,6 @@
 local lu = require 'lib/luaunit'
-local Tokens = require 'tokens'
 local driver = require 'luasql.sqlite3'
+local Tokens = require 'lib/tokens'
 local resDir = "resources/"
 
 TestMisc = {}
@@ -45,7 +45,7 @@ TestTokens = {}
 
     function TestTokens:testAddTokens()
         local numberOfTokens = 10
-        Tokens:add( 10 )
+        Tokens:add( numberOfTokens )
         local dbResult = self.db:execute( "SELECT COUNT(*) as tokencount FROM tokens" )
         local tokensCount = dbResult:fetch()
         lu.assertEquals( tonumber( tokensCount ), numberOfTokens, "Number of tokens created not matching requested" )
