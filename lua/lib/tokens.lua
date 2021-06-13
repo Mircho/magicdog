@@ -1,4 +1,6 @@
 -- Tokens module
+-- Author: Mircho Mirev
+-- 2021
 
 local driver = require 'luasql.sqlite3'
 
