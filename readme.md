@@ -18,3 +18,8 @@ The result is a module that works utilizes [NoDogSplash](https://github.com/nodo
 There are two things to be done in order to make it work on your OpenWrt router.
 - Copy the contents of the lua directory into a directory on your router. As it needs to read and write from a sqlite DB and create logs I suggest to have it on an external flash drive to minimize flash writes.
 - Copy the contents of the web/splash/build directory to a directory on your router and point NDS to it (see more in the respective readme)
+
+## Setting up the router
+
+- Follow the instructions on the [guest network on a dumb AP](https://openwrt.org/docs/guide-user/network/wifi/guestwifi/guestwifi_dumbap)
+- Install NDS from with opkg. Tested with 19.07 and NDS 4
