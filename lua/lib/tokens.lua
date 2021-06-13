@@ -43,7 +43,8 @@ local Tokens = {
     dbname = "vouchers.db",
     allCapsGen = allCapsGenerator,
     alpahnumGen = alphanumGenerator,
-    generator = nil
+    generator = nil,
+    tokenlen = 5
 }
 
 function Tokens:init( dbname )
@@ -90,7 +91,7 @@ end
 function Tokens:use( token_id )
     local token = self:findById( token_id )
     if( token ~= nil ) then
-        local useSQL = string.format( [[UPDATE tokens SET used=1 WHERE token_id=%d]], token_id )
+        local useSQL = string.format( [[UPDATE tokens SET used=1 WHERE token_id="%s"]], token_id )
         local res = assert( self.db:execute( useSQL ) )
         return math.floor( res )
     else
@@ -98,19 +99,54 @@ function Tokens:use( token_id )
     end
 end
 
-function Tokens:add( token_num )
+function Tokens:add( token_num, ... )
+    -- second argument would be the budget in seconds
+    local seconds_budget = (select(1,...)) or 900
+    -- third argument would be the length of the tokens that would be added
+    local token_len = (select(2,...)) or 5
+
     local insertSQL = "INSERT INTO tokens VALUES "
     local newTokensList = ""
 
-    for tkn in self.generator( 5, token_num ) do
-        insertSQL = insertSQL .. string.format( [[(NULL, "%s", 0, %d),]], tkn, 900 )
-        newTokensList = newTokensList .. "\n" .. tkn
+    assert( self.generator, "no generator selected" )
+    assert( token_num > 0, "we have to add positive number of tokens" )
+    assert( seconds_budget > 0, "the budget in seconds should be more than 0" )
+
+    local _maxBatchId = assert( self.db:execute( "SELECT MAX(BATCH_ID) FROM tokens" ) )
+    local maxBatch = tonumber( _maxBatchId:fetch() ) or 0
+    _maxBatchId:close()
+    maxBatch = maxBatch + 1
+
+    for tkn in self.generator( token_len, token_num ) do
+        insertSQL = insertSQL .. string.format( [[(NULL, %d, "%s", 0, %d),]], maxBatch, tkn, seconds_budget )
+        newTokensList = newTokensList .. tkn  .. "," .. seconds_budget .. "\n"
     end
 
     insertSQL = insertSQL:sub(1,-2) .. ";"
 
     self.db:execute( insertSQL )
-    return newTokensList
+    return "Batch: " .. maxBatch .. "\n" .. newTokensList
 end
+
+function Tokens:removeBatch( batch_id )
+    local useSQL = string.format( [[DELETE FROM tokens WHERE batch_id="%s"]], batch_id )
+    local res = assert( self.db:execute( useSQL ) )
+    return math.floor( res )
+end
+
+function Tokens:printAvailable( batch_id )
+    local useSQL = "SELECT * FROM tokens WHERE used=0"
+    if( batch_id ) then
+        useSQL = useSQL .. " AND batch_id=" .. batch_id
+    end
+    local _token = self.db:execute( useSQL )
+    local tokenRecord = _token:fetch( {}, "a" )
+    while tokenRecord do
+        print( string.format( "%d, %s, %d", tokenRecord.BATCH_ID, tokenRecord.TOKEN, tokenRecord.BUDGET ) )
+        tokenRecord = _token:fetch( {}, "a" )
+    end
+    _token:close()
+end
+
 
 return Tokens

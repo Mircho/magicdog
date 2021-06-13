@@ -51,9 +51,20 @@ TestTokens = {}
         lu.assertEquals( tonumber( tokensCount ), numberOfTokens, "Number of tokens created not matching requested" )
     end
 
+    function TestTokens:testRemoveTokensBatch()
+        local numberOfTokens = 10
+        Tokens:add( numberOfTokens )
+        local _maxBatch = self.db:execute( "SELECT MAX(BATCH_ID) FROM tokens" )
+        local maxBatch = tonumber( _maxBatch:fetch() )
+        _maxBatch:close()
+        lu.assertNotNil( maxBatch, "There is no batch added" )
+        local removed_items = Tokens:removeBatch( maxBatch )
+        lu.assertNotNil( removed_items, "There are no items removed" )
+    end
+
     function TestTokens:testUseToken()
         Tokens:add( 1 )
-        local dbResult = self.db:execute( "SELECT * FROM tokens" )
+        local dbResult = self.db:execute( "SELECT * FROM tokens WHERE USED=0 LIMIT 1" )
         local tokenRecord = dbResult:fetch( {}, "a" )
         dbResult:close()
         lu.assertEquals( tokenRecord.USED, 0, "Token is already used" )

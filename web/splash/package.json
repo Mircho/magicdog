@@ -1,0 +1,23 @@
+{
+  "name": "splash",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "dependencies": {
+    "@tailwindcss/forms": "^0.3.3",
+    "autoprefixer": "^10.2.6",
+    "postcss": "^8.3.0",
+    "postcss-cli": "^8.3.1",
+    "tailwindcss": "^2.1.2"
+  },
+  "devDependencies": {
+    "tailwindcss-cli": "^0.1.2"
+  },
+  "scripts": {
+    "build-pcss": "postcss src/tailwind.css -o build/res/tailwind.css",
+    "build": "tailwindcss-cli build src/tailwind.css -o build/res/tailwind.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

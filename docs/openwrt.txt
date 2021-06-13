@@ -1,0 +1,3 @@
+For setting up OpenWrt I had massive problems to make it work in dumb ap mode with a guest network and nodogsplash.
+Nodogsplash 4 was not available in the original repos of GL-Inet, so had to pull that from official OpenWrt 19.7 repos.
+Finally the tutorials for setting up a guest network differed here and there. Most importantly was to enable the guest network with proper forwarding rules to the lan and enable masquerading on that zone.
