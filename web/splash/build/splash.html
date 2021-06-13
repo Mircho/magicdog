@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!--
+Content:
+	Nodogsplash (NDS), by default, serves this splash page (splash.html)
+	when a client device Captive Portal Detection (CPD) process
+	attempts to send a port 80 request to the Internet.
+
+	You may either embed css in this file or use a separate .css file
+	in the same directory as this file, as demonstrated here.
+
+	It should be noted when designing a custom splash page
+	that for security reasons many CPD implementations:
+		Immediately close the browser when the client has authenticated.
+		Prohibit the use of href links.
+		Prohibit downloading of external files
+			(including .css and .js).
+		Prohibit the execution of javascript.
+
+Authentication:
+	A client is authenticated on submitting an HTTP form, method=get,
+	passing $authaction, $tok and $redir.
+
+	It is also possible to authenticate using an href link to
+	$authtarget but be aware that many device Captive Portal Detection
+	processes prohibit href links, so this method may not work with
+	all client devices.
+
+Available variables:
+	error_msg: $error_msg
+	gatewayname: $gatewayname
+	tok: $tok
+	redir: $redir
+	authaction: $authaction
+	denyaction: $denyaction
+	authtarget: $authtarget
+	clientip: $clientip
+	clientmac: $clientmac
+	clientupload: $clientupload
+	clientdownload: $clientdownload
+	gatewaymac: $gatewaymac
+	nclients: $nclients
+	maxclients: $maxclients
+	uptime: $uptime
+
+Additional Variables that can be passed back via the HTTP get,
+or appended to the query string of the authtarget link:
+	username
+	password
+-->
+<html lang="en">
+<head>
+    <!-- Do not cache this page -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$gatewayname</title>
+    <link rel="stylesheet" href="res/tailwind.css">
+</head>
+<body>
+    
+<div class="min-h-screen bg-gray-400 py-6 flex flex-col justify-center sm:py-12">
+    <div class="relative py-3 sm:max-w-xl sm:mx-auto">
+        <div class="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-3 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
+        <div class="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
+        <div class="max-w-md mx-auto">
+            <div>
+            <img src="res/magicdog.png" class="h-24 sm:h-12" />
+            </div>
+            <div class="divide-y divide-gray-200">
+            <div class="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
+                <p>Welcome to $gatewayname - entry point to the internet @ LK</p>
+                <ul class="list-disc space-y-2">
+                <li class="flex items-start">
+                    <span class="h-6 flex items-center sm:h-7">
+                    <svg class="flex-shrink-0 h-5 w-5 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    </span>
+                    <p class="ml-2">
+                    You don't have have any limitations to accessing internet
+                    </p>
+                </li>
+                <li class="flex items-start">
+                    <span class="h-6 flex items-center sm:h-7">
+                    <svg class="flex-shrink-0 h-5 w-5 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    </span>
+                    <p class="ml-2">
+                    You won't have access to the internal network
+                    </p>
+                </li>
+                </ul>
+                <p>Enjoy and have a good surf</p>
+            </div>
+
+            <div class="pt-8 text-base leading-6 font-bold sm:text-lg sm:leading-7">
+                <form method="get" action="$authaction">
+                    <input type="hidden" name="tok" value="$tok">
+                    <input type="hidden" name="redir" value="$redir">
+                    <input type="hidden" name="username" value="tokenuser">
+                    <div class="relative w-full mb-3">
+                        <input type="password" name="password" class="border-0 p-4 placeholder-gray-400 text-gray-700 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full" placeholder="Token" style="transition: all 0.15s ease 0s;" />
+                    </div>
+
+                    <div class="divide-y divide-gray-200">
+
+                    <input type="submit" value="Proceed with token" class="form-input rounded-full px-4 py-3">
+                </form>
+            </div>
+
+            
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+      
+
+</body>
+</html>
